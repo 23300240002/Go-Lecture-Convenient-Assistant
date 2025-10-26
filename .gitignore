@@ -1,0 +1,31 @@
+# Node modules
+/node_modules/
+# Build outputs
+/release/
+/dist/
+/win-unpacked/
+/build/
+/out/
+/*.exe
+/*.blockmap
+# Frontend build artifacts (如果 frontend/dist 也不想提交)
+frontend/dist/
+# IDE / editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Environment files
+.env
+.env.local
+# Temporary
+*.tmp
+*.temp
