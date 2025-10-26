@@ -94,6 +94,10 @@ const props = defineProps({
   triangleMarks: {
     type: Array,
     default: () => []
+  },
+  nextPlayer: {
+    type: Number,
+    default: 1
   }
 })
 
@@ -295,12 +299,11 @@ const handlePointer = evt => {
     view.y + (view.height - 1 - approxRowFromBottom)
 
   if (evt.button === 2) {
-    // 右键标三角
     emit('mark-triangle', [boardX, boardY])
     evt.preventDefault()
   } else if (evt.button === 0) {
-    // 左键落子
-    emit('place', {blockId: props.block.id, vertex: [boardX, boardY]})
+    // 传递 nextPlayer
+    emit('place', {blockId: props.block.id, vertex: [boardX, boardY], sign: props.nextPlayer})
   }
 }
 </script>

@@ -44,12 +44,6 @@
       ></textarea>
     </div>
 
-    <div class="board-toolbar" data-export-ignore="true">
-      <button type="button" @click="toggleHandNumbers">
-        {{ showHandNumbers ? '不显示手数' : '显示手数' }}
-      </button>
-    </div>
-
     <div class="board-wrapper">
       <button
         type="button"
@@ -61,20 +55,31 @@
         ◀ 添加讲解
       </button>
 
-      <CornerBoard
-        v-if="isCorner"
-        :block="block"
-        :showHandNumbers="showHandNumbers"
-        :triangleMarks="triangleMarks"
-        @place="emit('place', $event)"
-        @mark-triangle="handleMarkTriangle"
-      />
-      <div
-        v-else
-        ref="host"
-        class="full-board-host"
-        @contextmenu.prevent="handleBoardRightClick"
-      ></div>
+      <div class="board-area">
+        <div class="board-toolbar" data-export-ignore="true">
+          <button type="button" class="toolbar-btn" @click="toggleHandNumbers">
+            {{ showHandNumbers ? '不显示手数' : '显示手数' }}
+          </button>
+          <button type="button" class="toolbar-btn" @click="handlePass">
+            停一手（{{ nextPlayerLabel }}）
+          </button>
+        </div>
+        <CornerBoard
+          v-if="isCorner"
+          :block="block"
+          :showHandNumbers="showHandNumbers"
+          :triangleMarks="triangleMarks"
+          :nextPlayer="nextPlayer"
+          @place="handlePlace"
+          @mark-triangle="handleMarkTriangle"
+        />
+        <div
+          v-else
+          ref="host"
+          class="full-board-host"
+          @contextmenu.prevent="handleBoardRightClick"
+        ></div>
+      </div>
 
       <button
         type="button"
@@ -154,6 +159,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['place', 'toggle-side', 'side-text', 'side-style'])
+
 const host = ref(null)
 const hovering = ref(false)
 
@@ -178,13 +184,26 @@ const rightFont = reactive({
   color: '#1f2937'
 })
 
-const showHandNumbers = ref(true)
-// triangleMarks 必须是 ref([])，且只由 BoardBlock.vue 维护
-const triangleMarks = ref([])
+// 关键：直接用 block 的 showHandNumbers 和 triangleMarks
+const showHandNumbers = ref(props.block.showHandNumbers ?? true)
+const triangleMarks = ref(props.block.triangleMarks ?? [])
+
+const nextPlayer = ref(props.block.nextPlayer ?? 1)
+const nextPlayerLabel = computed(() => (nextPlayer.value === 1 ? '黑' : '白'))
+
+const syncBlockState = () => {
+  props.block.showHandNumbers = showHandNumbers.value
+  props.block.triangleMarks = triangleMarks.value.slice()
+}
 
 const toggleHandNumbers = () => {
   showHandNumbers.value = !showHandNumbers.value
+  syncBlockState()
   mountBoard()
+}
+
+const handlePass = () => {
+  nextPlayer.value = -nextPlayer.value
 }
 
 const emitSideStyle = side => {
@@ -226,7 +245,6 @@ const boardProps = computed(() => {
 
     board = board.makeMove(sign, vertex)
     const [x, y] = vertex
-    // 三角优先
     const isTriangle = triangleMarks.value.some(
       v => v[0] === x && v[1] === y
     )
@@ -248,7 +266,6 @@ const boardProps = computed(() => {
   }
 })
 
-// 右键标三角，triangleMarks 持久化
 const handleMarkTriangle = vertex => {
   const idx = triangleMarks.value.findIndex(
     v => v[0] === vertex[0] && v[1] === vertex[1]
@@ -258,7 +275,12 @@ const handleMarkTriangle = vertex => {
   } else {
     triangleMarks.value.splice(idx, 1)
   }
-  // 这里不需要 mountBoard，CornerBoard.vue 会自动响应 triangleMarks 的变化
+  syncBlockState()
+}
+
+const handlePlace = ({blockId, vertex}) => {
+  emit('place', {blockId, vertex, sign: nextPlayer.value})
+  nextPlayer.value = -nextPlayer.value
 }
 
 const handleVertexMouseUp = (evt, vertex) => {
@@ -268,7 +290,7 @@ const handleVertexMouseUp = (evt, vertex) => {
     handleMarkTriangle(v)
     return
   }
-  emit('place', {blockId: props.block.id, vertex: v})
+  handlePlace({blockId: props.block.id, vertex: v})
 }
 
 const handleBoardRightClick = evt => {
@@ -310,6 +332,7 @@ onMounted(() => {
 watch(
   () => [props.block.moves, props.block.size, props.block.variant, showHandNumbers.value, triangleMarks.value],
   () => {
+    syncBlockState()
     if (isCorner.value) {
       // 角部棋盘不需要 mountBoard，CornerBoard.vue 响应 props
     } else {
@@ -334,112 +357,98 @@ onBeforeUnmount(() => {
   padding: 12px 0;
   width: 100%;
 }
-.board-toolbar {
-  margin-bottom: 8px;
-}
-.board-toolbar button {
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
-  color: #fff;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-}
 
 .board-wrapper {
-  position: relative;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: transparent;
-  padding: 16px 48px;
-  margin: 0 auto;
-  flex: 0 1 auto;
+  gap: 0;
+  position: relative;
 }
 
-.full-board-host {
+.board-area {
+  position: relative;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.board-toolbar {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-btn {
+  padding: 2px 8px;
+  border-radius: 5px;
+  border: 1px solid #2563eb;
+  background: #f3f6fd;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(37,99,235,0.06);
+  transition: background 0.15s;
+}
+
+.toolbar-btn:hover {
+  background: #e0e7ff;
+}
+
+.full-board-host,
+.corner-board {
+  margin-top: 24px;
+}
+
+.side-handle {
+  position: relative;
+  top: 0;
+  background: #f3f6fd;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s;
+}
+
+.side-handle.left {
+  margin-right: 8px;
+  align-self: flex-start;
+}
+
+.side-handle.right {
+  margin-left: 8px;
+  align-self: flex-end;
+}
+
+.side-handle:hover {
+  background: #e0e7ff;
 }
 
 .side-text {
-  flex: 0 0 240px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.side-toolbar {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.side-toolbar label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.side-toolbar select,
-.side-toolbar input[type='color'] {
-  border: 1px solid #cbd5f5;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 12px;
-  background: #fff;
+  min-width: 120px;
+  max-width: 180px;
 }
 
 .side-area {
   width: 100%;
-  min-height: 240px;
-  resize: vertical;
-  border: 1px solid #cbd5f5;
-  border-radius: 16px;
-  padding: 14px;
-  line-height: 1.6;
+  min-height: 80px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  font-size: 15px;
+  font-family: inherit;
   background: #fff;
-  box-shadow: inset 0 1px 4px rgba(15, 23, 42, 0.08);
-}
-
-.side-area:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
-}
-
-.side-handle {
-  position: absolute;
-  top: 50%;
-  padding: 6px 12px;
-  font-size: 13px;
-  color: #fff;
-  background: rgba(37, 99, 235, 0.88);
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.side-handle.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.side-handle.left {
-  left: 12px;
-  transform: translate(-100%, -50%);
-}
-
-.side-handle.right {
-  right: 12px;
-  transform: translate(100%, -50%);
+  resize: vertical;
 }
 </style>

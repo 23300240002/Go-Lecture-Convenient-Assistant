@@ -102,7 +102,8 @@ const handleUndo = ({blockId}) => {
   })
 }
 
-const handlePlace = ({blockId, vertex}) => {
+// 修改：落子时支持 sign 参数
+const handlePlace = ({blockId, vertex, sign}) => {
   const page = activePage.value
   if (!page) return
 
@@ -138,18 +139,19 @@ const handlePlace = ({blockId, vertex}) => {
     return
   }
 
-  const sign = block.nextPlayer ?? 1
-  const {overwrite} = board.analyzeMove(sign, vertex)
+  // 新增：落子方由参数 sign 决定
+  const moveSign = typeof sign === 'number' ? sign : block.nextPlayer ?? 1
+  const {overwrite} = board.analyzeMove(moveSign, vertex)
   if (overwrite) return
 
-  const updatedMoves = [...(block.moves ?? []), {vertex, sign}]
-  const nextPlayer = -sign
+  const updatedMoves = [...(block.moves ?? []), {vertex, sign: moveSign}]
+  // nextPlayer 由 BoardBlock.vue 控制，不在这里自动切换
 
   setBoardState({
     pageId: page.id,
     blockId,
     moves: updatedMoves,
-    nextPlayer
+    nextPlayer: -moveSign
   })
 }
 
@@ -221,10 +223,15 @@ const handleHeadingStyle = ({target, style}) => {
 const handleExportPdf = async () => {
   if (!activePage.value || !exportContainerRef.value) return
   await nextTick()
-  const title =
-    stripHtml(activePage.value.heading?.main?.content) ||
-    activePage.value.title ||
-    '围棋讲义'
+  // 获取当前时间
+  const now = new Date().toLocaleString('zh-CN', {hour12: false})
+  // 页眉：左时间，右协会信息
+  const headerHtml = `
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;margin-bottom:8px;">
+      <span>${now}</span>
+      <span>浦东新区围棋协会 郭诣丰制作</span>
+    </div>
+  `
   const html = exportContainerRef.value.innerHTML
   const printWindow = window.open('', '_blank', 'width=900,height=1200')
   if (!printWindow) {
@@ -236,10 +243,11 @@ const handleExportPdf = async () => {
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
-<title>${title}</title>
+<title>围棋讲义</title>
 <style>${EXPORT_STYLES}</style>
 </head>
 <body class="export-root">
+${headerHtml}
 ${html}
 </body>
 </html>`)

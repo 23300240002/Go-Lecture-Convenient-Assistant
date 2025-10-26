@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref, watch} from 'vue'
+import {onMounted, ref, watch, computed} from 'vue'
 
 const props = defineProps({
   block: {
@@ -21,8 +21,9 @@ const props = defineProps({
 
 const boardImage = ref('')
 
-const showHandNumbers = ref(true)
-const triangleMarks = ref(props.block.triangleMarks ?? [])
+// 关键：用 block 的状态
+const showHandNumbers = computed(() => props.block.showHandNumbers ?? true)
+const triangleMarks = computed(() => props.block.triangleMarks ?? [])
 
 const drawBoard = () => {
   const block = props.block
@@ -192,8 +193,8 @@ watch(
     props.block.size,
     props.block.variant,
     props.block.viewport,
-    showHandNumbers.value,
-    triangleMarks.value
+    props.block.showHandNumbers,
+    props.block.triangleMarks
   ],
   drawBoard,
   {deep: true}
