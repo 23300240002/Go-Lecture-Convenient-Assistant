@@ -1,0 +1,31 @@
+{
+  "name": "lecture-editor",
+  "version": "1.1.1",
+  "description": "围棋讲义编辑一点通 - 专为围棋教学设计的讲义编辑器",
+  "author": "郭诣丰 <19945700324>",
+  "main": "electron-main.js",
+  "build": {
+    "appId": "com.go.lecture",
+    "productName": "围棋讲义编辑一点通",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "icon": "icon.ico",
+      "target": "nsis"
+    },
+    "files": [
+      "app/**",
+      "electron-main.js",
+      "icon.ico"
+    ]
+  },
+  "scripts": {
+    "electron": "electron electron-main.js",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12"
+  }
+}
