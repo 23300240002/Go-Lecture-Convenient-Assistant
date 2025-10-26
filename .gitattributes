@@ -1,0 +1,9 @@
+# enforce LF line endings for text files
+* text=auto eol=lf
+
+# binary files
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary
+*.wasm binary
