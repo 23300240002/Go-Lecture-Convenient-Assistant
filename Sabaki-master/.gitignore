@@ -1,0 +1,11 @@
+dist/
+i18n/
+engines/
+node_modules/
+
+bundle.js
+bundle.js.LICENSE.txt
+bundle.js.map
+
+*.pdn
+*.vbs

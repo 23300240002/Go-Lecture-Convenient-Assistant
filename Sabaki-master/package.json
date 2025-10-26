@@ -1,0 +1,146 @@
+{
+  "name": "sabaki",
+  "productName": "Sabaki",
+  "version": "0.52.2",
+  "description": "An elegant Go/Baduk/Weiqi board and SGF editor for a more civilized age.",
+  "author": "Yichuan Shen <shen.yichuan@gmail.com>",
+  "homepage": "http://sabaki.yichuanshen.de",
+  "license": "MIT",
+  "main": "./src/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SabakiHQ/Sabaki"
+  },
+  "bugs": {
+    "url": "https://github.com/SabakiHQ/Sabaki/issues"
+  },
+  "build": {
+    "appId": "de.yichuanshen.sabaki",
+    "copyright": "Copyright © 2015-2022 Yichuan Shen",
+    "compression": "normal",
+    "linux": {
+      "target": "AppImage",
+      "category": "Game",
+      "artifactName": "sabaki-v${version}-linux-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "7z"
+      ],
+      "category": "public.app-category.board-games",
+      "artifactName": "sabaki-v${version}-mac-${arch}.${ext}"
+    },
+    "win": {
+      "artifactName": "sabaki-v${version}-win.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "fileAssociations": [
+      {
+        "ext": "sgf",
+        "name": "SGF",
+        "description": "Smart Game Format"
+      },
+      {
+        "ext": "ngf",
+        "name": "NGF",
+        "description": "wBaduk NGF"
+      },
+      {
+        "ext": "gib",
+        "name": "GIB",
+        "description": "Tygem GIB"
+      },
+      {
+        "ext": "ugf",
+        "name": "UGF",
+        "description": "PandaNET UGF"
+      }
+    ],
+    "files": [
+      "**/*",
+      "!**/{.github,.c9,scss,docs,test,tests,devtools,plugins,examples}${/*}",
+      "!ci${/*}",
+      "!src/{components,modules}${/*}",
+      "!engines",
+      "!node_modules",
+      "node_modules/@electron/remote",
+      "node_modules/@primer/octicons/build/svg/*",
+      "node_modules/@sabaki/deadstones/wasm/*",
+      "node_modules/@sabaki/shudan/css/*",
+      "node_modules/@sabaki/i18n/**/*",
+      "node_modules/dolm/**/*",
+      "node_modules/{iconv-lite,safer-buffer}/**/*",
+      "node_modules/pikaday/css/*"
+    ]
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "proseWrap": "always"
+  },
+  "dependencies": {
+    "@electron/remote": "^1.2.0",
+    "@mariotacke/color-thief": "^3.0.1",
+    "@primer/octicons": "^9.6.0",
+    "@sabaki/boardmatcher": "^1.2.0",
+    "@sabaki/deadstones": "^2.1.2",
+    "@sabaki/go-board": "^1.4.1",
+    "@sabaki/gtp": "^3.0.0",
+    "@sabaki/i18n": "0.51.1-1",
+    "@sabaki/immutable-gametree": "^1.9.4",
+    "@sabaki/influence": "^1.2.2",
+    "@sabaki/sgf": "^3.4.7",
+    "@sabaki/shudan": "^1.7.1",
+    "argv-split": "^2.0.1",
+    "classnames": "^2.2.6",
+    "dolm": "^0.7.3-beta",
+    "fix-path": "<4.0.0",
+    "iconv-lite": "^0.5.1",
+    "jschardet": "^3.0.0",
+    "natsort": "^2.0.2",
+    "pikaday": "^1.8.0",
+    "preact": "^10.4.0",
+    "react-markdown": "^8.0.3",
+    "remark-breaks": "^3.0.2",
+    "rimraf": "^3.0.2",
+    "uuid": "^7.0.3",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^7.3.0",
+    "electron": "<14.0.0",
+    "electron-builder": "^23.3.3",
+    "esm": "^3.2.25",
+    "mocha": "<9.0",
+    "onchange": "^6.1.0",
+    "prettier": "1.19.1",
+    "tmp": "^0.2.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "scripts": {
+    "test": "mocha --require esm",
+    "start": "electron ./",
+    "bundle": "webpack --mode production",
+    "build": "npm run bundle && electron-builder --dir",
+    "format-base": "prettier \"**/*.{js,html,md}\" \"!{{dist,i18n}/**,bundle.js*}\"",
+    "format-check": "npm run format-base -- --check",
+    "format": "npm run format-base -- --write",
+    "watch-format": "onchange \"**/*.{js,html,md}\" \"!{{dist,i18n}/**,bundle.js*}\" -- prettier --write {{changed}}",
+    "watch": "concurrently \"webpack --mode development --watch\" \"npm run watch-format\"",
+    "dist:macos": "npm run bundle && electron-builder -m --x64 --arm64",
+    "dist:linux": "npm run bundle && electron-builder -l --ia32 --x64 && node ./ci/mv.js ./dist/sabaki-vx.x.x-linux-i386.AppImage ./dist/sabaki-vx.x.x-linux-ia32.AppImage && node ./ci/mv.js ./dist/sabaki-vx.x.x-linux-x86_64.AppImage ./dist/sabaki-vx.x.x-linux-x64.AppImage",
+    "dist:arm64": "npm run bundle && electron-builder -l --arm64",
+    "dist:win32": "npm run bundle && electron-builder -w --ia32 && node ./ci/mv.js ./dist/sabaki-vx.x.x-win.exe ./dist/sabaki-vx.x.x-win-ia32-setup.exe",
+    "dist:win64": "npm run bundle && electron-builder -w --x64 && node ./ci/mv.js ./dist/sabaki-vx.x.x-win.exe ./dist/sabaki-vx.x.x-win-x64-setup.exe",
+    "dist:win32-portable": "npm run bundle && electron-builder -w portable --ia32 && node ./ci/mv.js ./dist/sabaki-vx.x.x-win.exe ./dist/sabaki-vx.x.x-win-ia32-portable.exe",
+    "dist:win64-portable": "npm run bundle && electron-builder -w portable --x64 && node ./ci/mv.js ./dist/sabaki-vx.x.x-win.exe ./dist/sabaki-vx.x.x-win-x64-portable.exe",
+    "dist:win": "npm run dist:win32 && npm run dist:win64 && npm run dist:win32-portable && npm run dist:win64-portable",
+    "i18n": "node ./ci/createI18n.js"
+  }
+}

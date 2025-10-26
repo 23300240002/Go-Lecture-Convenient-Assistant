@@ -1,0 +1,44 @@
+:root {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  color: #1f2937;
+  background-color: #e2e8f0;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#app {
+  margin: 0;
+  min-height: 100vh;
+  width: 100%;
+}
+
+body.exporting {
+  overflow: hidden;
+}
+
+.exporting [data-export-ignore] {
+  display: none !important;
+}
+
+.exporting textarea.side-area {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  resize: none !important;
+  pointer-events: none;
+}
